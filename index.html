@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Полная таблица с графиками</title>
+    <style>
+ body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f9f9f9;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #e0f7fa;
+        color: #000;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    /* Изменения курсора и анимация */
+    tr[data-graph] {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    tr[data-graph]:hover {
+        background-color: #e3f2fd !important;
+    }
+
+    .no-change {
+        background-color: #ffeb3b;
+        color: #000;
+    }
+
+    .positive-change {
+        background-color: #a5d6a7;
+        color: #000;
+    }
+
+    .negative-change {
+        background-color: #ffcdd2;
+        color: #000;
+    }
+
+    .graph-td {
+        padding: 0 !important;
+        border: none !important;
+        height: 300px;
+    }
+
+    .chart-container {
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+</head>
+<body>
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>Показатель</th>
+                <th>Текущий день</th>
+                <th>Вчера</th>
+                <th>Этот день недели</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Полный список пунктов -->
+            <tr data-graph="[500521, 480521, 4805121]">
+                <td>Выручка, руб</td>
+                <td>500 521</td>
+                <td class="negative-change">480 521 (-4%)</td>
+                <td>4 805 121</td>
+            </tr>
+            <tr data-graph="[300000, 300000, 300000]">
+                <td>Наценка</td>
+                <td>300 000</td>
+                <td class="no-change">300 000 (0%)</td>
+                <td>300 000</td>
+            </tr>
+            <tr data-graph="[100000, 100000, 100000]">
+                <td>Безналичный расчет</td>
+                <td>100 000</td>
+                <td class="no-change">100 000 (0%)</td>
+                <td>100 000</td>
+            </tr>
+            <tr data-graph="[100521, 100521, 100521]">
+                <td>Кредитные карты</td>
+                <td>100 521</td>
+                <td class="no-change">100 521 (0%)</td>
+                <td>100 521</td>
+            </tr>
+            <tr data-graph="[1300, 900, 900]">
+                <td>Средний чек, руб</td>
+                <td>1 300</td>
+                <td class="positive-change">900 (+44%)</td>
+                <td>900</td>
+            </tr>
+            <tr data-graph="[1200, 800, 800]">
+                <td>Средний гость, руб</td>
+                <td>1 200</td>
+                <td class="positive-change">800 (+50%)</td>
+                <td>800</td>
+            </tr>
+            <tr data-graph="[1000, 1100, 900]">
+                <td>Удержано из чека (после оплаты), руб</td>
+                <td>1 000</td>
+                <td class="negative-change">1 100 (-9%)</td>
+                <td>900</td>
+            </tr>
+            <tr data-graph="[1300, 1300, 900]">
+                <td>Удержано из чека (до оплаты), руб</td>
+                <td>1 300</td>
+                <td class="no-change">1 300 (0%)</td>
+                <td>900</td>
+            </tr>
+            <tr data-graph="[34, 36, 34]">
+                <td>Количество чеков</td>
+                <td>34</td>
+                <td class="negative-change">36 (-6%)</td>
+                <td>34</td>
+            </tr>
+            <tr data-graph="[34, 36, 32]">
+                <td>Количество гостей</td>
+                <td>34</td>
+                <td class="negative-change">36 (-6%)</td>
+                <td>32</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const rows = document.querySelectorAll('#data-table tbody tr[data-graph]');
+            
+            rows.forEach(row => {
+                row.addEventListener('click', function() {
+                    const graphData = JSON.parse(this.dataset.graph);
+                    const nextRow = this.nextElementSibling;
+
+                    if (nextRow && nextRow.classList.contains('graph-row')) {
+                        nextRow.remove();
+                    } else {
+                        const graphRow = document.createElement('tr');
+                        graphRow.className = 'graph-row';
+                        
+                        const graphCell = document.createElement('td');
+                        graphCell.colSpan = 4;
+                        graphCell.className = 'graph-td';
+                        
+                        const container = document.createElement('div');
+                        container.className = 'chart-container';
+                        container.id = `chart-${this.rowIndex}`;
+                        
+                        graphCell.appendChild(container);
+                        graphRow.appendChild(graphCell);
+                        
+                        this.parentNode.insertBefore(graphRow, this.nextSibling);
+                        
+                        Highcharts.chart(container.id, {
+                            chart: {
+                                type: 'line',
+                                width: null,
+                                height: 300
+                            },
+                            title: { text: '' },
+                            xAxis: {
+                                categories: ['Текущий день', 'Вчера', 'Этот день недели']
+                            },
+                            yAxis: {
+                                title: { text: 'Значение' }
+                            },
+                            series: [{
+                                name: this.cells[0].textContent,
+                                data: graphData,
+                                color: '#2196F3',
+                                marker: {
+                                    radius: 5
+                                }
+                            }],
+                            plotOptions: {
+                                series: {
+                                    animation: {
+                                        duration: 300
+                                    }
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
